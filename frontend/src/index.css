@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   Palette LIGHT (défaut — style corporate industriel)
+   Rouge #C8102E, fond blanc propre
+   ===================================================================== */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg:           #f4f5f7;
+  --bg-card:      #ffffff;
+  --bg-subtle:    #f0f1f4;
+  --bg-hover:     rgba(0,0,0,0.035);
+  --border:       #e2e4ea;
+  --border-muted: #eceef3;
+
+  --text-1:       #111318;
+  --text-2:       #4a5068;
+  --text-3:       #9299b0;
+
+  --accent:       #C8102E;
+  --accent-h:     #a50d25;
+  --accent-muted: rgba(200,16,46,0.07);
+  --accent-fore:  #ffffff;
+
+  --danger:       #C8102E;
+  --danger-muted: rgba(200,16,46,0.08);
+  --success:      #1e7a4a;
+  --warn:         #b56700;
+
+  --nav-bg:       #ffffff;
+  --nav-border:   #e2e4ea;
+  --scrollbar:    #d0d3dc;
+}
+
+/* =====================================================================
+   Palette DARK — rouge atténué sur fond sombre
+   ===================================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg:           #0e1014;
+  --bg-card:      #161a20;
+  --bg-subtle:    #1d222a;
+  --bg-hover:     rgba(255,255,255,0.04);
+  --border:       #262c38;
+  --border-muted: #1e2330;
+
+  --text-1:       #eaecf2;
+  --text-2:       #6b738f;
+  --text-3:       #40485e;
+
+  --accent:       #e8354d;
+  --accent-h:     #ff4d67;
+  --accent-muted: rgba(232,53,77,0.12);
+  --accent-fore:  #ffffff;
+
+  --danger:       #e8354d;
+  --danger-muted: rgba(232,53,77,0.12);
+  --success:      #3dab6a;
+  --warn:         #e0a550;
+
+  --nav-bg:       #161a20;
+  --nav-border:   #262c38;
+  --scrollbar:    #262c38;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* =====================================================================
+   Composants utilitaires — variables CSS uniquement
+   ===================================================================== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.input {
+  @apply w-full rounded-md px-3 py-2 text-sm outline-none;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input::placeholder { color: var(--text-3); }
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+  background: var(--bg-card);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all duration-150;
+  @apply disabled:opacity-40 disabled:pointer-events-none;
+}
+.btn-primary {
+  @apply btn;
+  background: var(--accent);
+  color: var(--accent-fore);
+}
+.btn-primary:hover { background: var(--accent-h); }
+
+.btn-ghost {
+  @apply btn;
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-1); }
+
+.btn-danger {
+  @apply btn;
+  background: var(--danger-muted);
+  color: var(--danger);
+  border: 1px solid rgba(200,16,46,0.2);
+}
+.btn-danger:hover { background: var(--danger-muted); border-color: var(--danger); }
+
+.label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider;
+  color: var(--text-2);
+}
+.mono { font-family: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace; }
+
+/* Tables */
+.tbl-row { cursor: pointer; }
+.tbl-row:hover { background: var(--bg-hover); }
+.tbl-divider { border-color: var(--border-muted); }
+.tbl-head { background: var(--bg-subtle); color: var(--text-2); }
+
+/* Generic hover helpers */
+.hover-subtle:hover { background: var(--bg-hover); }
+.divide-theme > * + * { border-top: 1px solid var(--border-muted); }
