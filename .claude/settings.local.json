@@ -24,7 +24,8 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 4000,5175 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output \"done\")",
       "Bash(rm -f /tmp/token.txt /tmp/project_id.txt /tmp/jobid.txt /tmp/backend.log /tmp/backend2.log /tmp/agent.log)",
       "Bash(curl -s -o /dev/null -w \"backend:%{http_code}\\\\n\" http://localhost:4000/api/health --max-time 2)",
-      "Bash(curl -s -o /dev/null -w \"agent:%{http_code}\\\\n\" http://localhost:5175/status --max-time 2)"
+      "Bash(curl -s -o /dev/null -w \"agent:%{http_code}\\\\n\" http://localhost:5175/status --max-time 2)",
+      "Bash(chmod +x /Users/kaderbrym/Documents/VS_Code/CSAF/agent/node_modules/.bin/tsx)"
     ],
     "additionalDirectories": [
       "\\tmp"
