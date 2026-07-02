@@ -7,7 +7,24 @@
       "PowerShell(Get-NetTCPConnection -LocalPort 5175 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output \"done\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5175/status --max-time 2)",
       "Bash(curl -s -i -X POST http://localhost:5175/shutdown)",
-      "Bash(curl -s -o /dev/null -w \"backend:%{http_code} agent:\" http://localhost:4000/api/health --max-time 2)"
+      "Bash(curl -s -o /dev/null -w \"backend:%{http_code} agent:\" http://localhost:4000/api/health --max-time 2)",
+      "Bash(docker --version)",
+      "Bash(PORT=4001 npm run dev)",
+      "Read(//tmp/**)",
+      "Bash(docker exec *)",
+      "Bash(docker start *)",
+      "Bash(docker volume *)",
+      "Bash(docker compose *)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -LocalPort 4001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } ; Write-Output done')",
+      "Bash(curl -s http://localhost:4000/api/health)",
+      "Bash(curl -s http://localhost:4001/api/health)",
+      "Bash(curl -s http://localhost:4001/api/vulnerabilities -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X POST http://localhost:4001/api/network-discovery/devices/import -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"project_id\": __TRACKED_VAR__, \"device_ids\": [999]}')",
+      "PowerShell(Get-NetTCPConnection -LocalPort 4001 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output \"done\")",
+      "Bash(curl -s -o /dev/null -w \"backend-4001:%{http_code}\\\\n\" http://localhost:4001/api/health --max-time 2)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

@@ -289,6 +289,12 @@ const FR: Dict = {
     `✓ ${imported} device(s) importé(s)${skipped ? `, ${skipped} ignoré(s)` : ''} et corrélé(s).`,
   netdiscovery_ignore_btn: 'Ignorer',
   netdiscovery_select_project_first: 'Choisissez un projet cible avant d\'importer.',
+  // Membres du projet
+  members_title: 'Membres du projet',
+  members_btn: 'Membres',
+  members_add_btn: 'Ajouter',
+  members_add_placeholder: 'Choisir un utilisateur…',
+  project_access_denied: 'Accès refusé à ce projet.',
   // Droits
   no_delete_rights: 'Action refusée — seuls les administrateurs peuvent supprimer des éléments.',
   // Theme
@@ -600,6 +606,12 @@ const EN: Dict = {
     `✓ ${imported} device(s) imported${skipped ? `, ${skipped} skipped` : ''} and correlated.`,
   netdiscovery_ignore_btn: 'Ignore',
   netdiscovery_select_project_first: 'Choose a target project before importing.',
+  // Project members
+  members_title: 'Project members',
+  members_btn: 'Members',
+  members_add_btn: 'Add',
+  members_add_placeholder: 'Choose a user…',
+  project_access_denied: 'Access denied to this project.',
   // Rights
   no_delete_rights: 'Action denied — only administrators can delete items.',
   // Theme

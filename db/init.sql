@@ -186,6 +186,34 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ---------------------------------------------------------------------
+-- Membres d'un projet (contrôle d'accès par projet)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_members (
+    id          SERIAL PRIMARY KEY,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    added_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    added_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (project_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_project_members_project ON project_members(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_members_user    ON project_members(user_id);
+
+-- Backfill de sécurité : tout projet existant qui n'a encore AUCUN membre
+-- (créé avant cette migration) reçoit automatiquement tous les utilisateurs
+-- non-admin comme membres, pour éviter un verrouillage-surprise des projets
+-- déjà en production. Idempotent et auto-limitant : dès qu'un projet a au
+-- moins un membre (via ce backfill ou via la création normale), cette
+-- requête ne le retouche plus — donc sans risque à chaque redémarrage.
+INSERT INTO project_members (project_id, user_id)
+SELECT p.id, u.id
+  FROM projects p
+  CROSS JOIN users u
+ WHERE u.is_admin = false
+   AND NOT EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = p.id)
+ON CONFLICT (project_id, user_id) DO NOTHING;
+
+-- ---------------------------------------------------------------------
 -- Journal d'audit (suivi de toutes les actions utilisateurs)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit_logs (

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { query } from '../db.js';
 import { insertDevice, type DeviceInput } from '../lib/insertDevice.js';
 import { requireAuth } from '../middleware/requireAuth.js';
+import { userCanAccessProject } from '../lib/projectAccess.js';
 
 export const networkDiscovery = new Hono();
 
@@ -83,6 +84,11 @@ networkDiscovery.post('/devices/import', requireAuth, async (c) => {
   const deviceIds: number[] = Array.isArray(body?.device_ids) ? body.device_ids.map(Number) : [];
   const overrides: Record<string, Partial<DeviceInput>> = body?.overrides && typeof body.overrides === 'object' ? body.overrides : {};
   if (!projectId || !deviceIds.length) return c.json({ error: 'project_id et device_ids requis' }, 400);
+
+  const user = c.get('user');
+  if (!(await userCanAccessProject(user, projectId))) {
+    return c.json({ error: 'Accès refusé à ce projet' }, 403);
+  }
 
   let imported = 0; let skipped = 0;
   for (const id of deviceIds) {

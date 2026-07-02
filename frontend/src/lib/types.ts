@@ -28,6 +28,14 @@ export interface ProjectDetail extends Project {
   devices: Device[];
 }
 
+export interface ProjectMember {
+  userId: number;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  addedAt: string;
+}
+
 export interface NetworkScan {
   id: number;
   label: string;

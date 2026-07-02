@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
-import type { Project, ProjectDetail, Match, Device } from '../lib/types';
+import type { Project, ProjectDetail, Match, Device, ProjectMember } from '../lib/types';
 import {
   Modal, Empty, Spinner, SeverityBadge, formatDate,
   ConfirmDialog, VULN_STATUS, TREATED_STATUSES, ProjectStatusBadge,
@@ -195,6 +195,94 @@ function EditProjectModal({ open, project, onClose, onSaved }: {
   );
 }
 
+interface UserOption { id: number; username: string; }
+
+function MembersModal({ open, projectId, onClose }: { open: boolean; projectId: number; onClose: () => void }) {
+  const { t } = useLang();
+  const { user: me } = useAuth();
+  const { showToast } = useToast();
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [allUsers, setAllUsers] = useState<UserOption[]>([]);
+  const [selected, setSelected] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function load() {
+    try {
+      const [m, u] = await Promise.all([
+        api.get<ProjectMember[]>(`/projects/${projectId}/members`),
+        me?.isAdmin ? api.get<UserOption[]>('/users') : Promise.resolve([]),
+      ]);
+      setMembers(m);
+      setAllUsers(u);
+    } catch (e: any) {
+      showToast(e.message, 'error');
+    }
+  }
+  useEffect(() => { if (open) load(); }, [open, projectId]);
+
+  async function add() {
+    if (!selected) return;
+    setBusy(true);
+    try {
+      await api.post(`/projects/${projectId}/members`, { userId: Number(selected) });
+      setSelected('');
+      await load();
+    } catch (e: any) {
+      showToast(e.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(userId: number) {
+    try {
+      await api.del(`/projects/${projectId}/members/${userId}`);
+      await load();
+    } catch (e: any) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  const candidates = allUsers.filter((u) => !members.some((m) => m.userId === u.id));
+
+  return (
+    <Modal open={open} onClose={onClose} title={t('members_title')}>
+      <div className="space-y-3">
+        <div className="card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="tbl-head text-left text-xs uppercase tracking-wide">
+              <tr><th className="px-3 py-2">{t('users_col_name')}</th><th className="px-3 py-2"></th></tr>
+            </thead>
+            <tbody className="divide-theme">
+              {members.map((m) => (
+                <tr key={m.userId} className="tbl-row">
+                  <td className="px-3 py-2" style={{ color: 'var(--text-1)' }}>{m.username}</td>
+                  <td className="px-3 py-2 text-right">
+                    {me?.isAdmin && (
+                      <button className="text-sm transition" style={{ color: 'var(--danger)' }} onClick={() => remove(m.userId)}>
+                        {t('delete')}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {me?.isAdmin && (
+          <div className="flex gap-2">
+            <select className="input" value={selected} onChange={(e) => setSelected(e.target.value)}>
+              <option value="">{t('members_add_placeholder')}</option>
+              {candidates.map((u) => <option key={u.id} value={u.id}>{u.username}</option>)}
+            </select>
+            <button className="btn-primary" disabled={busy || !selected} onClick={add}>{t('members_add_btn')}</button>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
 /* ================================================================== *
  *  Détail d'un projet
  * ================================================================== */
@@ -278,14 +366,20 @@ function ProjectView({ id, onBack }: { id: number; onBack: () => void }) {
   const [editDevice, setEditDevice] = useState<Device | null>(null);
   const [confirmProjectDelete, setConfirmProjectDelete] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(true);
+  const [showMembers, setShowMembers] = useState(false);
 
   async function load() {
-    const [p, m] = await Promise.all([
-      api.get<ProjectDetail>(`/projects/${id}`),
-      api.get<Match[]>(`/projects/${id}/matches`),
-    ]);
-    setProject(p);
-    setMatches(m);
+    try {
+      const [p, m] = await Promise.all([
+        api.get<ProjectDetail>(`/projects/${id}`),
+        api.get<Match[]>(`/projects/${id}/matches`),
+      ]);
+      setProject(p);
+      setMatches(m);
+    } catch (e: any) {
+      showToast(t('project_access_denied'), 'error');
+      onBack();
+    }
   }
   useEffect(() => { load(); }, [id]);
 
@@ -332,6 +426,7 @@ function ProjectView({ id, onBack }: { id: number; onBack: () => void }) {
             <div className="mt-3 flex justify-end gap-2">
               <button className="btn-ghost" onClick={() => window.open(`/api/projects/${id}/report.html?lang=${lang}`, '_blank', 'noopener')}>{t('project_report')}</button>
               <a className="btn-ghost" href={`/api/projects/${id}/report.csv?lang=${lang}`}>{t('project_export_csv')}</a>
+              <button className="btn-ghost" onClick={() => setShowMembers(true)}>{t('members_btn')}</button>
               <button className="btn-ghost" onClick={() => setShowEdit(true)}>{t('project_edit')}</button>
               <button
                 className="btn-danger"
@@ -462,6 +557,7 @@ function ProjectView({ id, onBack }: { id: number; onBack: () => void }) {
         />
       )}
       <ImportDevicesModal open={showImport} projectId={id} onClose={() => setShowImport(false)} onDone={() => { setShowImport(false); load(); }} />
+      <MembersModal open={showMembers} projectId={id} onClose={() => setShowMembers(false)} />
       <ConfirmDialog
         open={!!deviceToDelete}
         title={t('device_delete_title')}

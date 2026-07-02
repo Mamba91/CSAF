@@ -5,6 +5,7 @@ import { insertDevice } from '../lib/insertDevice.js';
 import { buildReport, renderReportHtml, renderReportCsv } from '../lib/report.js';
 import { deriveProjectStatus } from '../lib/projectStatus.js';
 import { requireAuth, requireAdmin, optionalAuth } from '../middleware/requireAuth.js';
+import { requireProjectAccess } from '../lib/projectAccess.js';
 
 export const projects = new Hono();
 
@@ -53,6 +54,13 @@ async function logAction(c: any, action: string, resource: string, resourceId: s
 /* ---- Projets ---- */
 
 projects.get('/', requireAuth, async (c) => {
+  const user = c.get('user');
+  const params: unknown[] = [];
+  let scope = '';
+  if (!user.isAdmin) {
+    params.push(user.userId);
+    scope = `WHERE p.id IN (SELECT project_id FROM project_members WHERE user_id=$${params.length})`;
+  }
   const rows = await query<any>(
     `SELECT p.*,
             (SELECT COUNT(*) FROM devices d WHERE d.project_id = p.id) AS device_count,
@@ -60,7 +68,9 @@ projects.get('/', requireAuth, async (c) => {
             COALESCE((SELECT critical_count FROM v_project_risk r WHERE r.project_id = p.id),0) AS critical_count,
             COALESCE((SELECT high_count FROM v_project_risk r WHERE r.project_id = p.id),0) AS high_count
        FROM projects p
-       ORDER BY p.id DESC`
+       ${scope}
+       ORDER BY p.id DESC`,
+    params
   );
   const sm = await projectStatusMap();
   for (const p of rows) {
@@ -71,7 +81,7 @@ projects.get('/', requireAuth, async (c) => {
   return c.json(rows);
 });
 
-projects.get('/:id', requireAuth, async (c) => {
+projects.get('/:id', requireAuth, requireProjectAccess, async (c) => {
   const id = Number(c.req.param('id'));
   const [project] = await query(`SELECT * FROM projects WHERE id=$1`, [id]);
   if (!project) return c.json({ error: 'introuvable' }, 404);
@@ -86,11 +96,16 @@ projects.post('/', requireAuth, async (c) => {
     `INSERT INTO projects (name, description, owner) VALUES ($1,$2,$3) RETURNING *`,
     [body.name, body.description || '', body.owner || '']
   );
+  const user = c.get('user');
+  await query(
+    `INSERT INTO project_members (project_id, user_id, added_by) VALUES ($1,$2,$2) ON CONFLICT DO NOTHING`,
+    [row.id, user.userId]
+  );
   await logAction(c, 'CREATE_PROJECT', 'project', String(row.id), { name: row.name });
   return c.json(row, 201);
 });
 
-projects.put('/:id', requireAuth, async (c) => {
+projects.put('/:id', requireAuth, requireProjectAccess, async (c) => {
   const id = Number(c.req.param('id'));
   const body = await c.req.json();
   const [row] = await query(
@@ -112,7 +127,7 @@ projects.delete('/:id', requireAdmin, async (c) => {
 
 /* ---- Devices ---- */
 
-projects.post('/:id/devices', requireAuth, async (c) => {
+projects.post('/:id/devices', requireAuth, requireProjectAccess, async (c) => {
   const projectId = Number(c.req.param('id'));
   const body = await c.req.json();
   const device = await insertDevice(projectId, body);
@@ -121,29 +136,33 @@ projects.post('/:id/devices', requireAuth, async (c) => {
   return c.json(device, 201);
 });
 
-projects.put('/:id/devices/:deviceId', requireAuth, async (c) => {
+projects.put('/:id/devices/:deviceId', requireAuth, requireProjectAccess, async (c) => {
+  const projectId = Number(c.req.param('id'));
   const deviceId = Number(c.req.param('deviceId'));
   const body = await c.req.json();
   const [device] = await query<any>(
     `UPDATE devices SET name=$1, vendor=$2, product_family=$3,
             firmware_version=$4, article_number=$5, cpe=$6, notes=$7
-     WHERE id=$8 RETURNING *`,
+     WHERE id=$8 AND project_id=$9 RETURNING *`,
     [body.name, body.vendor || '', body.product_family || '',
-     body.firmware_version || '', body.article_number || '', body.cpe || '', body.notes || '', deviceId]
+     body.firmware_version || '', body.article_number || '', body.cpe || '', body.notes || '', deviceId, projectId]
   );
-  if (device) await matchDevice(device);
+  if (!device) return c.json({ error: 'device introuvable pour ce projet' }, 404);
+  await matchDevice(device);
   await logAction(c, 'UPDATE_DEVICE', 'device', String(deviceId), { name: body.name });
   return c.json(device);
 });
 
-projects.delete('/:id/devices/:deviceId', requireAdmin, async (c) => {
+projects.delete('/:id/devices/:deviceId', requireAdmin, requireProjectAccess, async (c) => {
+  const projectId = Number(c.req.param('id'));
   const deviceId = Number(c.req.param('deviceId'));
-  await query(`DELETE FROM devices WHERE id=$1`, [deviceId]);
+  const deleted = await query<any>(`DELETE FROM devices WHERE id=$1 AND project_id=$2 RETURNING id`, [deviceId, projectId]);
+  if (!deleted.length) return c.json({ error: 'device introuvable pour ce projet' }, 404);
   await logAction(c, 'DELETE_DEVICE', 'device', String(deviceId), {});
   return c.json({ ok: true });
 });
 
-projects.post('/:id/devices/bulk', requireAuth, async (c) => {
+projects.post('/:id/devices/bulk', requireAuth, requireProjectAccess, async (c) => {
   const projectId = Number(c.req.param('id'));
   const body = await c.req.json().catch(() => null);
   const list = Array.isArray(body?.devices) ? body.devices : [];
@@ -161,7 +180,7 @@ projects.post('/:id/devices/bulk', requireAuth, async (c) => {
 
 /* ---- Vulnérabilités corrélées ---- */
 
-projects.get('/:id/matches', requireAuth, async (c) => {
+projects.get('/:id/matches', requireAuth, requireProjectAccess, async (c) => {
   const id = Number(c.req.param('id'));
   const rows = await query(
     `SELECT m.id AS match_id, m.confidence, m.reason,
@@ -187,7 +206,7 @@ projects.get('/:id/matches', requireAuth, async (c) => {
   return c.json(rows);
 });
 
-projects.post('/:id/vuln-status', requireAuth, async (c) => {
+projects.post('/:id/vuln-status', requireAuth, requireProjectAccess, async (c) => {
   const id = Number(c.req.param('id'));
   const body = await c.req.json().catch(() => null);
   const vulnKey = (body?.vuln_key || '').toString();
@@ -216,9 +235,49 @@ projects.post('/:id/vuln-status', requireAuth, async (c) => {
   return c.json(row);
 });
 
+/* ---- Membres du projet ---- */
+
+projects.get('/:id/members', requireAuth, requireProjectAccess, async (c) => {
+  const id = Number(c.req.param('id'));
+  const rows = await query<any>(
+    `SELECT u.id AS user_id, u.username, u.email, u.is_admin, pm.added_at
+       FROM project_members pm
+       JOIN users u ON u.id = pm.user_id
+      WHERE pm.project_id=$1
+      ORDER BY u.username`,
+    [id]
+  );
+  return c.json(rows.map((r) => ({
+    userId: r.user_id, username: r.username, email: r.email, isAdmin: r.is_admin, addedAt: r.added_at,
+  })));
+});
+
+// Ajout/suppression réservés aux admins (évite qu'un membre s'auto-octroie des droits).
+projects.post('/:id/members', requireAdmin, async (c) => {
+  const id = Number(c.req.param('id'));
+  const { userId } = await c.req.json<{ userId?: number }>();
+  if (!userId) return c.json({ error: 'userId requis' }, 400);
+  const [u] = await query<any>('SELECT id, username FROM users WHERE id=$1', [userId]);
+  if (!u) return c.json({ error: 'utilisateur introuvable' }, 404);
+  await query(
+    `INSERT INTO project_members (project_id, user_id, added_by) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
+    [id, userId, c.get('user').userId]
+  );
+  await logAction(c, 'ADD_PROJECT_MEMBER', 'project_member', String(id), { userId, username: u.username });
+  return c.json({ ok: true }, 201);
+});
+
+projects.delete('/:id/members/:userId', requireAdmin, async (c) => {
+  const id = Number(c.req.param('id'));
+  const userId = Number(c.req.param('userId'));
+  await query(`DELETE FROM project_members WHERE project_id=$1 AND user_id=$2`, [id, userId]);
+  await logAction(c, 'REMOVE_PROJECT_MEMBER', 'project_member', String(id), { userId });
+  return c.json({ ok: true });
+});
+
 /* ---- Rapports (lang = fr | en) ---- */
 
-projects.get('/:id/report', requireAuth, async (c) => {
+projects.get('/:id/report', requireAuth, requireProjectAccess, async (c) => {
   const id = Number(c.req.param('id'));
   const data = await buildReport(id);
   if (!data) return c.json({ error: 'projet introuvable' }, 404);
