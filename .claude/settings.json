@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5175/status)",
+      "Bash(curl -s -i -X POST http://localhost:5175/scan/20ea6361-0f98-4f50-b07d-c7fec2d2c156/cancel)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5175 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output \"done\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5175/status --max-time 2)",
+      "Bash(curl -s -i -X POST http://localhost:5175/shutdown)",
+      "Bash(curl -s -o /dev/null -w \"backend:%{http_code} agent:\" http://localhost:4000/api/health --max-time 2)"
+    ]
+  }
+}

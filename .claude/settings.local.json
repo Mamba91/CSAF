@@ -2,7 +2,32 @@
   "permissions": {
     "allow": [
       "PowerShell(Get-Command node -ErrorAction SilentlyContinue; Get-Command npm -ErrorAction SilentlyContinue; $env:PATH -split ';' | Where-Object { $_ -match 'node|npm' })",
-      "PowerShell(@\\(\"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\", \"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\npm.cmd\", \"$env:APPDATA\\\\npm\\\\npm.cmd\", \"$env:NVM_HOME\\\\npm.cmd\"\\) | Where-Object { Test-Path $_ })"
+      "PowerShell(@\\(\"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\", \"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\npm.cmd\", \"$env:APPDATA\\\\npm\\\\npm.cmd\", \"$env:NVM_HOME\\\\npm.cmd\"\\) | Where-Object { Test-Path $_ })",
+      "Bash(npx tsc *)",
+      "Bash(npm install *)",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(timeout 15 npm run dev)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:4000/api/health)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:4000/api/network-discovery/scans -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(curl -s http://localhost:4000/api/network-discovery/devices -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(curl -s http://localhost:4000/api/audit-logs?limit=5 -H 'Authorization: Bearer __CMDSUB_OUTPUT__')",
+      "Bash(pkill -f \"tsx watch src/index.ts\")",
+      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"CommandLine LIKE '\\\\''%tsx watch src/index.ts%'\\\\''\" | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:4000/api/health --max-time 2)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 4000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }; Write-Output \"done\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:5175/status)",
+      "Bash(curl -s -i -X OPTIONS http://localhost:5175/scan -H \"Origin: http://localhost:5173\" -H \"Access-Control-Request-Method: POST\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 4000,5175 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output \"done\")",
+      "Bash(rm -f /tmp/token.txt /tmp/project_id.txt /tmp/jobid.txt /tmp/backend.log /tmp/backend2.log /tmp/agent.log)",
+      "Bash(curl -s -o /dev/null -w \"backend:%{http_code}\\\\n\" http://localhost:4000/api/health --max-time 2)",
+      "Bash(curl -s -o /dev/null -w \"agent:%{http_code}\\\\n\" http://localhost:5175/status --max-time 2)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

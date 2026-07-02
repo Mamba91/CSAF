@@ -11,19 +11,21 @@ import Advisories from './tabs/Advisories';
 import Vulnerabilities from './tabs/Vulnerabilities';
 import Users from './tabs/Users';
 import AuditLogs from './tabs/AuditLogs';
+import NetworkDiscovery from './tabs/NetworkDiscovery';
 import { api } from './lib/api';
 import { useImportProgress } from './lib/importProgress';
 import { ImportProgress } from './components/ui';
 
-type Tab = 'dashboard' | 'projects' | 'advisories' | 'sources' | 'search' | 'vulns' | 'users' | 'auditlogs';
+type Tab = 'dashboard' | 'projects' | 'netdiscovery' | 'advisories' | 'sources' | 'search' | 'vulns' | 'users' | 'auditlogs';
 
 const NAV_BASE: { key: Tab; tKey: string }[] = [
-  { key: 'dashboard',   tKey: 'nav_dashboard'   },
-  { key: 'projects',    tKey: 'nav_projects'    },
-  { key: 'advisories',  tKey: 'nav_advisories'  },
-  { key: 'vulns',       tKey: 'nav_vulns'       },
-  { key: 'sources',     tKey: 'nav_sources'     },
-  { key: 'search',      tKey: 'nav_search'      },
+  { key: 'dashboard',    tKey: 'nav_dashboard'    },
+  { key: 'projects',     tKey: 'nav_projects'     },
+  { key: 'netdiscovery', tKey: 'nav_netdiscovery' },
+  { key: 'advisories',   tKey: 'nav_advisories'   },
+  { key: 'vulns',        tKey: 'nav_vulns'        },
+  { key: 'sources',      tKey: 'nav_sources'      },
+  { key: 'search',       tKey: 'nav_search'       },
 ];
 const NAV_ADMIN: { key: Tab; tKey: string }[] = [
   { key: 'users',     tKey: 'nav_users'     },
@@ -275,14 +277,15 @@ export default function App() {
 
       {/* ── Contenu principal ─────────────────────────────────────────── */}
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-6 py-6" style={{ paddingBottom: importProgress.active ? 72 : undefined }}>
-        {tab === 'dashboard'   && <Dashboard go={go} />}
-        {tab === 'projects'    && <Projects focusId={projectFocus} />}
-        {tab === 'advisories'  && <Advisories />}
-        {tab === 'sources'     && <Sources />}
-        {tab === 'search'      && <Search />}
-        {tab === 'vulns'       && <Vulnerabilities />}
-        {tab === 'users'       && user.isAdmin && <Users />}
-        {tab === 'auditlogs'   && user.isAdmin && <AuditLogs />}
+        {tab === 'dashboard'    && <Dashboard go={go} />}
+        {tab === 'projects'     && <Projects focusId={projectFocus} />}
+        {tab === 'netdiscovery' && <NetworkDiscovery />}
+        {tab === 'advisories'   && <Advisories />}
+        {tab === 'sources'      && <Sources />}
+        {tab === 'search'       && <Search />}
+        {tab === 'vulns'        && <Vulnerabilities />}
+        {tab === 'users'        && user.isAdmin && <Users />}
+        {tab === 'auditlogs'    && user.isAdmin && <AuditLogs />}
       </main>
     </div>
   );

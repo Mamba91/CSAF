@@ -208,3 +208,32 @@ CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at DESC);
 ALTER TABLE vuln_status ADD COLUMN IF NOT EXISTS resolved_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE vuln_status ADD COLUMN IF NOT EXISTS resolved_by    TEXT DEFAULT '';
 ALTER TABLE vuln_status ADD COLUMN IF NOT EXISTS resolved_at    TIMESTAMPTZ;
+
+-- ---------------------------------------------------------------------
+-- Découverte réseau (scans SNMP effectués par l'agent local)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS network_scans (
+    id           SERIAL PRIMARY KEY,
+    label        TEXT    NOT NULL DEFAULT '',
+    ip_range     TEXT    NOT NULL DEFAULT '',      -- ex: "192.168.1.0/24"
+    created_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    device_count INTEGER NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS discovered_devices (
+    id                 SERIAL PRIMARY KEY,
+    scan_id            INTEGER NOT NULL REFERENCES network_scans(id) ON DELETE CASCADE,
+    ip_address         TEXT    NOT NULL DEFAULT '',
+    mac_address        TEXT    DEFAULT '',
+    hostname           TEXT    DEFAULT '',          -- sysName
+    sys_descr          TEXT    DEFAULT '',          -- sysDescr
+    sys_object_id      TEXT    DEFAULT '',          -- sysObjectID
+    vendor_guess       TEXT    DEFAULT '',
+    status             TEXT    NOT NULL DEFAULT 'new'
+                       CHECK (status IN ('new','imported','ignored')),
+    imported_device_id INTEGER REFERENCES devices(id) ON DELETE SET NULL,
+    discovered_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_discovered_devices_scan   ON discovered_devices(scan_id);
+CREATE INDEX IF NOT EXISTS idx_discovered_devices_status ON discovered_devices(status);

@@ -28,6 +28,33 @@ export interface ProjectDetail extends Project {
   devices: Device[];
 }
 
+export interface NetworkScan {
+  id: number;
+  label: string;
+  ip_range: string;
+  created_by: number | null;
+  created_by_username: string | null;
+  device_count: number;
+  created_at: string;
+}
+
+export interface DiscoveredDevice {
+  id: number;
+  scan_id: number;
+  ip_address: string;
+  mac_address: string;
+  hostname: string;
+  sys_descr: string;
+  sys_object_id: string;
+  vendor_guess: string;
+  status: 'new' | 'imported' | 'ignored';
+  imported_device_id: number | null;
+  discovered_at: string;
+  scan_label: string;
+  scan_ip_range: string;
+  scan_created_at: string;
+}
+
 export interface Source {
   id: number;
   name: string;

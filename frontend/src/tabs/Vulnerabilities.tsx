@@ -1,30 +1,13 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
 import type { Vulnerability } from '../lib/types';
-import { SeverityBadge, Spinner, Empty, Modal, ConfirmDialog, formatDate } from '../components/ui';
+import { SeverityBadge, Spinner, Empty, ConfirmDialog } from '../components/ui';
+import VulnerabilityDetailModal from '../components/VulnerabilityDetailModal';
 import { useLang } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
 import { useToast } from '../lib/toast';
 
 const SEVS = ['', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
-
-function CollapsibleSection({ label, defaultOpen = true, children }: {
-  label: string; defaultOpen?: boolean; children: ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div>
-      <button
-        className="flex w-full items-center justify-between rounded py-1 transition"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <div className="label">{label}</div>
-        <span style={{ color: 'var(--text-3)', fontSize: '10px' }}>{open ? '▲' : '▼'}</span>
-      </button>
-      {open && <div className="mt-1">{children}</div>}
-    </div>
-  );
-}
 
 type SortDir = 'asc' | 'desc';
 
@@ -51,7 +34,7 @@ function SortTh({
 }
 
 export default function Vulnerabilities() {
-  const { t, dateLocale } = useLang();
+  const { t } = useLang();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [rows, setRows] = useState<Vulnerability[]>([]);
@@ -253,70 +236,15 @@ export default function Vulnerabilities() {
         </div>
       )}
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.cve || t('vuln_col_cve')} width="max-w-2xl">
-        {detail && (
-          <>
-            {/* Scrollable content */}
-            <div className="space-y-4 overflow-y-auto pr-1 text-sm" style={{ maxHeight: 'calc(100vh - 17rem)' }}>
-              <div className="flex items-center gap-3">
-                <SeverityBadge severity={detail.cvss_severity} score={detail.cvss_score} />
-                {detail.cwe && <span style={{ color: 'var(--text-2)' }}>{detail.cwe}</span>}
-              </div>
-              <div>
-                <div className="label">{t('vuln_detail_title_label')}</div>
-                <p style={{ color: 'var(--text-1)' }}>{detail.title}</p>
-              </div>
-              {detail.description && (
-                <CollapsibleSection label={t('vuln_detail_description')}>
-                  <p style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>{detail.description}</p>
-                </CollapsibleSection>
-              )}
-              {detail.cvss_vector && (
-                <div>
-                  <div className="label">{t('vuln_detail_cvss')}</div>
-                  <p className="mono text-xs" style={{ color: 'var(--text-2)' }}>{detail.cvss_vector}</p>
-                </div>
-              )}
-              {detail.remediation && (
-                <CollapsibleSection label={t('vuln_detail_remediation')} defaultOpen={false}>
-                  <p style={{ color: 'var(--text-2)', lineHeight: 1.6 }}>{detail.remediation}</p>
-                </CollapsibleSection>
-              )}
-              <div>
-                <div className="label">{t('vuln_detail_advisory')}</div>
-                <p style={{ color: 'var(--text-2)' }}>
-                  <span className="mono" style={{ color: 'var(--accent)' }}>{detail.tracking_id}</span> — {detail.advisory_title} ({detail.publisher})
-                  {detail.released && <span className="ml-2" style={{ color: 'var(--text-3)' }}>{formatDate(detail.released, dateLocale)}</span>}
-                </p>
-              </div>
-              <div>
-                <div className="label">{t('vuln_detail_affected', detail.affected?.length || 0)}</div>
-                <div className="max-h-48 space-y-1 overflow-y-auto">
-                  {(detail.affected || []).map((a: any) => (
-                    <div key={a.id} className="rounded px-3 py-1.5 text-xs" style={{ background: 'var(--bg-subtle)', color: 'var(--text-2)' }}>
-                      {a.product_name}
-                      {a.version_range && <span className="mono ml-1" style={{ color: 'var(--text-3)' }}>({a.version_range})</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {/* Delete button always visible outside scroll area */}
-            <div className="mt-4 flex justify-end pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-              <button
-                className="btn-danger text-sm"
-                style={{ opacity: user?.isAdmin ? 1 : 0.45 }}
-                onClick={() => guardDelete(() => {
-                  setDeleteTarget({ id: detail.id, label: detail.cve || detail.title });
-                  setDetail(null);
-                })}
-              >
-                {t('delete')}
-              </button>
-            </div>
-          </>
-        )}
-      </Modal>
+      <VulnerabilityDetailModal
+        detail={detail}
+        onClose={() => setDetail(null)}
+        canDelete={user?.isAdmin}
+        onDeleteRequest={(d) => guardDelete(() => {
+          setDeleteTarget({ id: d.id, label: d.cve || d.title });
+          setDetail(null);
+        })}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

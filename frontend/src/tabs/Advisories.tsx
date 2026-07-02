@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../lib/api';
 import type { Advisory } from '../lib/types';
 import { Spinner, Empty, Modal, ConfirmDialog, SeverityBadge, formatDate } from '../components/ui';
+import VulnerabilityDetailModal from '../components/VulnerabilityDetailModal';
 import { useLang } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
 import { useToast } from '../lib/toast';
@@ -36,6 +37,7 @@ export default function Advisories() {
   const [severity, setSeverity] = useState('');
   const [q, setQ] = useState('');
   const [detail, setDetail] = useState<AdvisoryDetail | null>(null);
+  const [vulnDetail, setVulnDetail] = useState<any>(null);
   const [toDelete, setToDelete] = useState<AdvisoryRow | null>(null);
   const [selectedPublishers, setSelectedPublishers] = useState<Set<string>>(new Set());
   const [deletePublishersTarget, setDeletePublishersTarget] = useState<string[] | null>(null);
@@ -61,6 +63,10 @@ export default function Advisories() {
 
   async function openDetail(id: number) {
     setDetail(await api.get<AdvisoryDetail>(`/advisories/${id}`));
+  }
+
+  async function openVulnDetail(id: number) {
+    setVulnDetail(await api.get(`/vulnerabilities/${id}`));
   }
 
   async function confirmDelete() {
@@ -242,7 +248,12 @@ export default function Advisories() {
               <div className="label">{t('advisories_detail_vulns', detail.vulnerabilities.length)}</div>
               <div className="max-h-72 space-y-1.5 overflow-y-auto">
                 {detail.vulnerabilities.map((v) => (
-                  <div key={v.id} className="flex items-center gap-3 rounded px-3 py-2" style={{ background: 'var(--bg-subtle)' }}>
+                  <div
+                    key={v.id}
+                    className="hover-subtle flex cursor-pointer items-center gap-3 rounded px-3 py-2 transition"
+                    style={{ background: 'var(--bg-subtle)' }}
+                    onClick={() => openVulnDetail(v.id)}
+                  >
                     <SeverityBadge severity={v.cvss_severity} score={v.cvss_score} />
                     <span className="mono text-xs" style={{ color: 'var(--accent)' }}>{v.cve || '—'}</span>
                     <span className="flex-1 truncate" style={{ color: 'var(--text-2)' }}>{v.title}</span>
@@ -266,6 +277,8 @@ export default function Advisories() {
           </div>
         )}
       </Modal>
+
+      <VulnerabilityDetailModal detail={vulnDetail} onClose={() => setVulnDetail(null)} />
 
       <ConfirmDialog
         open={!!toDelete}

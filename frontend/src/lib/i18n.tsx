@@ -13,6 +13,7 @@ const FR: Dict = {
   nav_vulns: 'Vulnérabilités',
   nav_sources: 'Sources',
   nav_search: 'Recherche',
+  nav_netdiscovery: 'Découverte réseau',
   app_subtitle: 'gestion de vulnérabilités OT',
   api_connecting: 'connexion…',
   api_online: 'API connectée',
@@ -231,6 +232,63 @@ const FR: Dict = {
   import_done: (imported: number, skipped: number) =>
     `✓ ${imported} device(s) importé(s)${skipped ? `, ${skipped} ignoré(s)` : ''} et corrélé(s).`,
   import_read_error: 'Erreur de lecture : ',
+  // Découverte réseau (SNMP)
+  netdiscovery_intro_title: "Comment scanner votre réseau ?",
+  netdiscovery_intro_body:
+    "Le navigateur ne peut pas scanner votre réseau directement. Sur un poste connecté au segment réseau à " +
+    "analyser, installez l'agent local (dossier « agent/ » du projet, `npm install`) puis lancez-le en mode " +
+    "serveur pour le piloter depuis cette page (formulaire ci-dessous) :",
+  netdiscovery_intro_cmd: 'npm run serve',
+  netdiscovery_intro_cli_note:
+    "Alternative en ligne de commande, sans passer par cette page : " +
+    "npm run dev -- --range 192.168.1.0/24 --api-url http://VOTRE-SERVEUR:4000/api --username admin --password ***",
+  netdiscovery_launch_title: 'Lancer un scan depuis cette page',
+  netdiscovery_agent_checking: 'vérification…',
+  netdiscovery_agent_online: 'agent connecté',
+  netdiscovery_agent_offline: 'agent injoignable',
+  netdiscovery_agent_retry: 'réessayer',
+  netdiscovery_agent_stop: "arrêter l'agent",
+  netdiscovery_agent_url_label: "Adresse de l'agent local",
+  netdiscovery_api_url_label: "URL de l'API du serveur",
+  netdiscovery_range_label: 'Plage IP (CIDR)',
+  netdiscovery_community_label: 'Communauté SNMP',
+  netdiscovery_scan_label_label: 'Nom du scan',
+  netdiscovery_launch_btn: 'Lancer le scan',
+  netdiscovery_stop_scan_btn: 'Arrêter le scan',
+  netdiscovery_scanning: (found: number) => `Scan en cours… ${found} équipement(s) trouvé(s)`,
+  netdiscovery_scan_done: (found: number) => `✓ Scan terminé — ${found} équipement(s) détecté(s).`,
+  netdiscovery_scan_cancelled: 'Scan arrêté.',
+  netdiscovery_scan_error: 'Erreur du scan : ',
+  netdiscovery_agent_offline_hint:
+    "Lancez l'agent local en mode serveur (double-cliquez sur « agent/start-agent.cmd », ou lancez " +
+    '« npm run serve » dans le dossier agent/) sur un poste connecté au réseau à scanner, puis cliquez sur ' +
+    '« réessayer ».',
+  netdiscovery_scans_title: 'Scans effectués',
+  netdiscovery_scans_empty: 'Aucun scan pour le moment. Lancez l\'agent local pour découvrir des équipements.',
+  netdiscovery_scans_col_label: 'Nom',
+  netdiscovery_scans_col_range: 'Plage IP',
+  netdiscovery_scans_col_count: 'Équipements',
+  netdiscovery_scans_col_by: 'Par',
+  netdiscovery_scans_col_date: 'Date',
+  netdiscovery_scan_delete_title: 'Supprimer le scan',
+  netdiscovery_scan_delete_msg: (label: string) => `Supprimer le scan « ${label} » et tous ses équipements détectés ?`,
+  netdiscovery_devices_title: 'Équipements détectés',
+  netdiscovery_devices_empty: 'Aucun équipement détecté en attente de relecture.',
+  netdiscovery_show_all: 'Afficher aussi importés / ignorés',
+  netdiscovery_col_ip: 'IP',
+  netdiscovery_col_mac: 'MAC',
+  netdiscovery_col_descr: 'Description SNMP',
+  netdiscovery_col_status: 'Statut',
+  netdiscovery_status_new: 'Nouveau',
+  netdiscovery_status_imported: 'Importé',
+  netdiscovery_status_ignored: 'Ignoré',
+  netdiscovery_project_label: 'Projet cible',
+  netdiscovery_project_placeholder: '— choisir un projet —',
+  netdiscovery_import_btn: (n: number) => `Importer la sélection (${n})`,
+  netdiscovery_import_done: (imported: number, skipped: number) =>
+    `✓ ${imported} device(s) importé(s)${skipped ? `, ${skipped} ignoré(s)` : ''} et corrélé(s).`,
+  netdiscovery_ignore_btn: 'Ignorer',
+  netdiscovery_select_project_first: 'Choisissez un projet cible avant d\'importer.',
   // Droits
   no_delete_rights: 'Action refusée — seuls les administrateurs peuvent supprimer des éléments.',
   // Theme
@@ -281,6 +339,7 @@ const EN: Dict = {
   nav_vulns: 'Vulnerabilities',
   nav_sources: 'Sources',
   nav_search: 'Search',
+  nav_netdiscovery: 'Network Discovery',
   app_subtitle: 'OT vulnerability management',
   api_connecting: 'connecting…',
   api_online: 'API connected',
@@ -485,6 +544,62 @@ const EN: Dict = {
   import_done: (imported: number, skipped: number) =>
     `✓ ${imported} device(s) imported${skipped ? `, ${skipped} skipped` : ''} and correlated.`,
   import_read_error: 'Read error: ',
+  // Network discovery (SNMP)
+  netdiscovery_intro_title: 'How to scan your network?',
+  netdiscovery_intro_body:
+    "The browser cannot scan your network directly. On a machine connected to the network segment to " +
+    "analyze, install the local agent (the project's \"agent/\" folder, `npm install`) then run it in server " +
+    "mode to drive it from this page (form below):",
+  netdiscovery_intro_cmd: 'npm run serve',
+  netdiscovery_intro_cli_note:
+    "Command-line alternative, without using this page: " +
+    "npm run dev -- --range 192.168.1.0/24 --api-url http://YOUR-SERVER:4000/api --username admin --password ***",
+  netdiscovery_launch_title: 'Launch a scan from this page',
+  netdiscovery_agent_checking: 'checking…',
+  netdiscovery_agent_online: 'agent connected',
+  netdiscovery_agent_offline: 'agent unreachable',
+  netdiscovery_agent_retry: 'retry',
+  netdiscovery_agent_stop: 'stop agent',
+  netdiscovery_agent_url_label: 'Local agent address',
+  netdiscovery_api_url_label: 'Server API URL',
+  netdiscovery_range_label: 'IP range (CIDR)',
+  netdiscovery_community_label: 'SNMP community',
+  netdiscovery_scan_label_label: 'Scan name',
+  netdiscovery_launch_btn: 'Launch scan',
+  netdiscovery_stop_scan_btn: 'Stop scan',
+  netdiscovery_scanning: (found: number) => `Scanning… ${found} device(s) found`,
+  netdiscovery_scan_done: (found: number) => `✓ Scan complete — ${found} device(s) detected.`,
+  netdiscovery_scan_cancelled: 'Scan stopped.',
+  netdiscovery_scan_error: 'Scan error: ',
+  netdiscovery_agent_offline_hint:
+    'Run the local agent in server mode (double-click "agent/start-agent.cmd", or run "npm run serve" ' +
+    'in the agent/ folder) on a machine connected to the network to scan, then click "retry".',
+  netdiscovery_scans_title: 'Scans performed',
+  netdiscovery_scans_empty: 'No scans yet. Run the local agent to discover devices.',
+  netdiscovery_scans_col_label: 'Name',
+  netdiscovery_scans_col_range: 'IP range',
+  netdiscovery_scans_col_count: 'Devices',
+  netdiscovery_scans_col_by: 'By',
+  netdiscovery_scans_col_date: 'Date',
+  netdiscovery_scan_delete_title: 'Delete scan',
+  netdiscovery_scan_delete_msg: (label: string) => `Delete scan "${label}" and all its discovered devices?`,
+  netdiscovery_devices_title: 'Discovered devices',
+  netdiscovery_devices_empty: 'No discovered devices awaiting review.',
+  netdiscovery_show_all: 'Also show imported / ignored',
+  netdiscovery_col_ip: 'IP',
+  netdiscovery_col_mac: 'MAC',
+  netdiscovery_col_descr: 'SNMP description',
+  netdiscovery_col_status: 'Status',
+  netdiscovery_status_new: 'New',
+  netdiscovery_status_imported: 'Imported',
+  netdiscovery_status_ignored: 'Ignored',
+  netdiscovery_project_label: 'Target project',
+  netdiscovery_project_placeholder: '— choose a project —',
+  netdiscovery_import_btn: (n: number) => `Import selection (${n})`,
+  netdiscovery_import_done: (imported: number, skipped: number) =>
+    `✓ ${imported} device(s) imported${skipped ? `, ${skipped} skipped` : ''} and correlated.`,
+  netdiscovery_ignore_btn: 'Ignore',
+  netdiscovery_select_project_first: 'Choose a target project before importing.',
   // Rights
   no_delete_rights: 'Action denied — only administrators can delete items.',
   // Theme

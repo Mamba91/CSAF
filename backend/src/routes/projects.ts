@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { query } from '../db.js';
 import { matchDevice } from '../lib/match.js';
+import { insertDevice } from '../lib/insertDevice.js';
 import { buildReport, renderReportHtml, renderReportCsv } from '../lib/report.js';
 import { deriveProjectStatus } from '../lib/projectStatus.js';
 import { requireAuth, requireAdmin, optionalAuth } from '../middleware/requireAuth.js';
@@ -114,14 +115,8 @@ projects.delete('/:id', requireAdmin, async (c) => {
 projects.post('/:id/devices', requireAuth, async (c) => {
   const projectId = Number(c.req.param('id'));
   const body = await c.req.json();
-  if (!body.name) return c.json({ error: 'nom du device requis' }, 400);
-  const [device] = await query<any>(
-    `INSERT INTO devices (project_id, name, vendor, product_family, firmware_version, article_number, cpe, notes)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-    [projectId, body.name, body.vendor || '', body.product_family || '',
-     body.firmware_version || '', body.article_number || '', body.cpe || '', body.notes || '']
-  );
-  await matchDevice(device);
+  const device = await insertDevice(projectId, body);
+  if (!device) return c.json({ error: 'nom du device requis' }, 400);
   await logAction(c, 'ADD_DEVICE', 'device', String(device.id), { name: device.name, projectId });
   return c.json(device, 201);
 });
@@ -156,16 +151,8 @@ projects.post('/:id/devices/bulk', requireAuth, async (c) => {
 
   let imported = 0; let skipped = 0;
   for (const raw of list) {
-    const name = (raw?.name || '').toString().trim();
-    if (!name) { skipped++; continue; }
-    const [device] = await query<any>(
-      `INSERT INTO devices (project_id, name, vendor, product_family, firmware_version, article_number, cpe, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [projectId, name, (raw.vendor||'').toString().trim(), (raw.product_family||'').toString().trim(),
-       (raw.firmware_version||'').toString().trim(), (raw.article_number||'').toString().trim(),
-       (raw.cpe||'').toString().trim(), (raw.notes||'').toString().trim()]
-    );
-    await matchDevice(device);
+    const device = await insertDevice(projectId, raw);
+    if (!device) { skipped++; continue; }
     imported++;
   }
   await logAction(c, 'BULK_IMPORT_DEVICES', 'device', String(projectId), { imported, skipped });

@@ -11,6 +11,7 @@ import { vulnerabilities, dashboard } from './routes/vulnerabilities.js';
 import { auth } from './routes/auth.js';
 import { users } from './routes/users.js';
 import { auditlogs } from './routes/auditlogs.js';
+import { networkDiscovery } from './routes/networkDiscovery.js';
 
 const app = new Hono();
 
@@ -23,6 +24,7 @@ app.route('/api/auth', auth);
 app.route('/api/users', users);
 app.route('/api/audit-logs', auditlogs);
 app.route('/api/projects', projects);
+app.route('/api/network-discovery', networkDiscovery);
 app.route('/api/sources', sources);
 app.route('/api/search', search);
 app.route('/api/advisories', advisories);
