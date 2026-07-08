@@ -37,6 +37,51 @@ docker compose up --build
 
 Le schéma est appliqué automatiquement au démarrage.
 
+## Installation sur un serveur Linux du réseau local
+
+Pour héberger l'outil en continu sur un serveur Linux (Docker + Compose plugin
+installés) accessible depuis les postes du réseau local :
+
+```bash
+# 1) Copier le projet sur le serveur (ex: via git clone, scp, rsync...)
+git clone <url-du-repo> csaf && cd csaf
+# ou : rsync -av --exclude node_modules --exclude .git ./ user@serveur:/opt/csaf/
+
+# 2) Configurer les secrets (mot de passe DB, JWT, admin) avant tout démarrage
+cp .env.example .env
+nano .env   # changez au minimum JWT_SECRET et ADMIN_PASSWORD
+
+# 3) Démarrer en tâche de fond, avec redémarrage auto (restart: unless-stopped)
+docker compose up -d --build
+
+# 4) Suivre les logs si besoin
+docker compose logs -f
+```
+
+- Accès depuis les autres postes du réseau : `http://<ip-du-serveur>:8080`
+  (remplacez `<ip-du-serveur>` par l'IP LAN du serveur, ex: `192.168.1.10`,
+  visible via `ip addr` sur le serveur).
+- Ouvrez les ports nécessaires dans le pare-feu du serveur si celui-ci est actif,
+  ex. avec `ufw` :
+  ```bash
+  sudo ufw allow 8080/tcp   # interface web
+  sudo ufw allow 4000/tcp   # API (nécessaire pour l'agent de découverte réseau)
+  ```
+- PostgreSQL n'est publié que sur `127.0.0.1` (voir `docker-compose.yml`) : il
+  n'est donc **pas** accessible depuis le réseau local, seul le backend y accède
+  en interne. Le port frontend/backend est personnalisable via `FRONTEND_PORT`
+  / `BACKEND_PORT` dans `.env` en cas de conflit avec un autre service.
+- Connectez-vous avec `admin` et le mot de passe défini dans `ADMIN_PASSWORD`
+  (uniquement pris en compte au tout premier démarrage, quand la base est
+  vide) — changez-le depuis l'application si vous avez gardé la valeur par
+  défaut.
+- Pour mettre à jour après un changement de code : `git pull` puis
+  `docker compose up -d --build`.
+- L'agent de découverte réseau (dossier `agent/`, voir
+  [agent/README.md](agent/README.md)) reste un outil **à part**, à lancer sur
+  un poste technicien branché sur le segment réseau à scanner — il n'est pas
+  conteneurisé et pointe vers `http://<ip-du-serveur>:4000/api`.
+
 ## Démarrage manuel (sans Docker)
 
 Prérequis : Node.js 20+, PostgreSQL 14+.
