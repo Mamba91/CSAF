@@ -1,5 +1,6 @@
 # CSAF Vulnerability Manager
 
+
 Outil de gestion de vulnérabilités pour parcs industriels / OT, basé sur les
 fichiers **CSAF** (Common Security Advisory Framework, OASIS v2.0). L'outil
 récupère et **parse automatiquement** les advisories CSAF des constructeurs,
